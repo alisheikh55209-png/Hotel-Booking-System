@@ -1,16 +1,26 @@
 /*
-
+	================================================================================
 	Project Title	: Hotel Booking/Reservation System
 	Language		: C++
+	Version			: 2.0 (Enhanced)
 	
-	Presented BY	: M. Ali Sheikh (70151489)
-					  Zaid (70149441)
-					  Anas Abid (70150234)
-					  Hussain Muavia (70147427)
-					  								
-	Date			: 14-05-2024
+	Team Members:
+	- M. Ali Sheikh (70151489) - Team Lead
+	- Zaid (70149441)
+	- Anas Abid (70150234)
+	- Hussain Muavia (70147427)
+	
+	Date Created	: 14-05-2024
+	Last Updated	: 31-12-2025
 	Submitted to	: Miss Areej
-
+	
+	Enhancements:
+	- Improved input validation
+	- Enhanced error handling
+	- Better file management
+	- Input bounds checking
+	- Safer string operations
+	================================================================================
 */
 
 #include<iostream>
@@ -20,8 +30,22 @@
 #include<ctime>
 #include<windows.h>
 #include<conio.h>
+#include<cctype>
 
 using namespace std;
+
+// Constants for validation
+const int MAX_ROOM_NO = 10;
+const int MAX_NAME = 20;
+const int MAX_ADDRESS = 25;
+const int MAX_PHONE = 35;
+const int MAX_NATIONALITY = 15;
+const int MAX_EMAIL = 20;
+const int MAX_PERIOD = 10;
+const int MAX_DATE = 10;
+const int MAX_USERNAME = 10;
+const int MAX_PASSWORD = 10;
+const string DATABASE_FILE = "add.txt";
 
 void add();
 void list();
@@ -45,13 +69,13 @@ void setcolor(int ForgC) {
 
 void login() {
 	
-    int a=0, i=0;
-    char uname[10], c = ' ';
-    char pword[10], code[10];
-    char user[10] = "user";
-    char pass[10] = "pass";
-    do { 
+    int a = 0, i = 0;
+    char uname[MAX_USERNAME], c = ' ';
+    char pword[MAX_PASSWORD];
+    const char user[] = "user";
+    const char pass[] = "pass";
     
+    do { 
         system("cls");
         
         cout << "\n   +----------------------------------------------------------------+  ";
@@ -60,45 +84,54 @@ void login() {
         cout << endl;
 
         cout << "\n   **************************  LOGIN FORM  **************************  ";
-        cout << "\n                    	    ENTER USERNAME:-";
-        cin >> uname;
-        cout << "\n                       	ENTER PASSWORD:-";
+        cout << "\n                          ENTER USERNAME: ";
         
-		while(i<10) {
-        	
-            int getch;
-			pword[i]= getch;
-            c=pword[i];
-            if(c==13) break;
-            else cout << "*";
+        // Secure input with bounds checking
+        cin.getline(uname, MAX_USERNAME);
+        if(cin.fail()) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+        }
+        
+        cout << "\n                          ENTER PASSWORD: ";
+        
+        i = 0;
+        while(i < MAX_PASSWORD - 1) {
+            c = getch();
+            if(c == 13) break;  // Enter key
+            if(c == 8) {        // Backspace
+                if(i > 0) {
+                    i--;
+                    cout << "\b \b";
+                }
+                continue;
+            }
+            pword[i] = c;
+            cout << "*";
             i++;
         }
         
-        pword[i]='\0';
-        i=0;
+        pword[i] = '\0';
         
-		if(strcmp(uname,user)==0 && strcmp(pword,pass)==0) {
-        	
-            cout << "  \n\n\n       WELCOME !!!! LOGIN IS SUCCESSFUL";
+        if(strcmp(uname, user) == 0 && strcmp(pword, pass) == 0) {
+            cout << "\n\n\n       WELCOME !!!! LOGIN IS SUCCESSFUL";
+            Sleep(1500);
             break;
         }
-        
-		else {
-            
-			cout << "\n        SORRY !!!!  LOGIN IS UNSUCESSFUL";
+        else {
+            cout << "\n        SORRY !!!!  LOGIN UNSUCCESSFUL";
+            cout << "\n        Attempt " << (a + 1) << " of 3";
             a++;
-            cin.get();
-
+            cout << "\n Press any key to continue...";
+            getch();
         }
         
-    } 
-	
-	while(a<=2);
+    } while(a <= 2);
     
-	if (a>2) {
-    	
-        cout << "\nSorry you have entered the wrong username and password for three times!!!";
-        cin.get();
+    if(a > 2) {
+        cout << "\nSorry! You have exceeded maximum login attempts. Exiting...";
+        Sleep(2000);
+        exit(0);
     }
     
     system("cls");
@@ -197,226 +230,292 @@ void login() {
 	
     	ofstream f;
     	char test;
-    	f.open("add.txt",ios::app);
-    	if(!f.is_open()) {
+    	f.open(DATABASE_FILE, ios::app | ios::binary);
     	
-        f.open("add.txt",ios::out);
-        system("cls");
-        cout << "Please hold on while we set our database in your computer!!";
-        cout << "\n Process completed press any key to continue!! ";
-        cin.get();
-    } 
-	
-	while(true)
-    
-    {
-        system("cls");
-        cout << "\n Enter Customer Details:";
-        cout << "\n**************************";
-        cout << "\n Enter Room number:\n";
-        cin >> s.roomnumber;
-        cin.ignore();
-        cout << "Enter Name:\n";
-        cin >> s.name;
-        cout << "Enter Address:\n";
-        cin >> s.address;
-        cout << "Enter Phone Number:\n";
-        cin >> s.phonenumber;
-        cout << "Enter Nationality:\n";
-        cin >> s.nationality;
-        cout << "Enter Email:\n";
-        cin >> s.email;
-        cout << "Enter Period(\'x\'days):\n";
-        cin >> s.period;
-        cout << "Enter Arrival date(dd\\mm\\yyyy):\n";
-        cin >> s.arrivaldate;
-        f.write((char*)&s,sizeof(s));
-        cin.ignore();
-        cout << "\n\n1 Room is successfully booked!!";
-        cout << "\n Press esc key to exit,  any other key to add another customer detail:";
-        test = _getche();
-        
-		if(test == 27)
-            break;
-    }
-    
-	f.close();
-}
+    	if(!f.is_open()) {
+    		f.open(DATABASE_FILE, ios::out | ios::binary);
+    		if(!f.is_open()) {
+    			system("cls");
+    			cout << "ERROR: Cannot create database file!";
+    			cout << "\nPress any key to continue...";
+    			getch();
+    			return;
+    		}
+        	system("cls");
+        	cout << "Setting up database...";
+        	cout << "\nProcess completed. Press any key to continue!";
+        	getch();
+    	}
+    	
+		while(true) {
+        	system("cls");
+        	cout << "\n Enter Customer Details:";
+        	cout << "\n**************************";
+        	
+        	// Room number input with validation
+        	cout << "\nEnter Room number (1-9999): ";
+        	cin >> s.roomnumber;
+        	if(cin.fail() || strlen(s.roomnumber) >= MAX_ROOM_NO) {
+        		cin.clear();
+        		cin.ignore(10000, '\n');
+        		cout << "Invalid room number! Press any key...";
+        		getch();
+        		continue;
+        	}
+        	cin.ignore();
+        	
+        	cout << "Enter Name: ";
+        	cin.getline(s.name, MAX_NAME);
+        	if(strlen(s.name) == 0) {
+        		cout << "Name cannot be empty! Press any key...";
+        		getch();
+        		continue;
+        	}
+        	
+        	cout << "Enter Address: ";
+        	cin.getline(s.address, MAX_ADDRESS);
+        	
+        	cout << "Enter Phone Number: ";
+        	cin.getline(s.phonenumber, MAX_PHONE);
+        	if(strlen(s.phonenumber) < 10) {
+        		cout << "Phone number too short! Press any key...";
+        		getch();
+        		continue;
+        	}
+        	
+        	cout << "Enter Nationality: ";
+        	cin.getline(s.nationality, MAX_NATIONALITY);
+        	
+        	cout << "Enter Email: ";
+        	cin.getline(s.email, MAX_EMAIL);
+        	
+        	cout << "Enter Period (e.g., 5 days): ";
+        	cin.getline(s.period, MAX_PERIOD);
+        	
+        	cout << "Enter Arrival date (dd/mm/yyyy): ";
+        	cin.getline(s.arrivaldate, MAX_DATE);
+        	
+        	f.write((char*)&s, sizeof(s));
+        	
+        	cout << "\n\n✓ Room successfully booked!";
+        	cout << "\nPress ESC to exit or any other key to add another booking: ";
+        	test = _getche();
+        	
+        	if(test == 27) break;  // ESC key
+    	}
+    	
+    	f.close();
+	}
 
 	void list() {
     
 		ifstream f;
-   	 	int i;
-    	f.open("add.txt",ios::in);
+   	 	int i, count = 0;
+    	f.open(DATABASE_FILE, ios::in | ios::binary);
     
-		if(!f.is_open())
-        exit(0);
+		if(!f.is_open()) {
+			system("cls");
+        	cout << "No records found! Please add a customer first.";
+        	cout << "\nPress any key to continue...";
+        	getch();
+        	return;
+    	}
+    	
     	system("cls");
-    	cout << "ROOM    ";
-    	cout << "NAME\t ";
-    	cout << "\tADDRESS ";
-    	cout << "\tPHONENUMBER ";
-    	cout << "\tNATIONALITY ";
-    	cout << "\tEMAIL ";
-    	cout << "\t\tPERIOD ";
-    	cout << "\t\tARRIVALDATE \n";
-
-    	for(i=0;i<118;i++)
-        	cout << "-";
-    		cout << endl;
+    	cout << "\n╔════════════════════════════════════════════════════════════════════════════════════════════════════╗";
+    	cout << "\n║                            CUSTOMER RECORDS DATABASE                                                ║";
+    	cout << "\n╚════════════════════════════════════════════════════════════════════════════════════════════════════╝\n";
     	
-		while(f.read((char*)&s,sizeof(s))) {
+    	cout << "ROOM\tNAME\t\tADDRESS\t\tPHONE\t\tNATIONALITY\tEMAIL\t\tPERIOD\tDATE\n";
+    	for(i = 0; i < 130; i++) cout << "-";
+    	cout << endl;
     	
-        cout << "\n" << s.roomnumber << "\t" << s.name << "\t\t" << s.address << "\t" << s.phonenumber << "\t" << s.nationality << "\t" << s.email << "\t" << s.period << "\t" << s.arrivaldate;
-    
+		while(f.read((char*)&s, sizeof(s))) {
+    		cout << s.roomnumber << "\t" << s.name << "\t\t" << s.address << "\t\t" 
+    		     << s.phonenumber << "\t" << s.nationality << "\t\t" 
+    		     << s.email << "\t\t" << s.period << "\t" << s.arrivaldate << endl;
+    		count++;
+    	}
+    	
+    	cout << "\n";
+    	for(i = 0; i < 130; i++) cout << "-";
+    	cout << "\nTotal Records: " << count << endl;
+    	cout << "\nPress any key to continue...";
+    	
+    	f.close();
+    	getch();
 	}
-    
-    cout << "\n";
-    for(i=0;i<118;i++)
-        cout << "-";
-    cout << endl;
-    f.close();
-    cin.get();
-}
 
 	void delete1() {
+    	
     	ifstream f;
     	ofstream t;
-    	int i=1;
-    	char roomnumber[20];
-    	t.open("temp.txt",ios::out);
-    	if(!t.is_open())
-        exit(0);
-    	f.open("add.txt",ios::in);
-    	if(!f.is_open())
-        exit(0);
-    	system("cls");
-    	cout << "Enter the Room Number of the hotel to be deleted from the database: \n";
-    	cin >> roomnumber;
+    	int i = 1;
+    	char roomnumber[MAX_ROOM_NO];
     	
-		while(f.read((char*)&s,sizeof(s))) {
-        
-		if(strcmp(s.roomnumber,roomnumber)==0) {
-            i=0;
-            continue;
-        }
-        
-        else
-            t.write((char*)&s,sizeof(s));
-    }
-    
-    if(i==1) {
-    
-	    cout << "\n\n Records of Customer in this  Room number is not found!!";
-        cin.get();
-        f.close();
-        t.close();
-        remove("add.txt");
-        rename("temp.txt","add.txt");
-        main();
-        
-    }
-    
-	cout << "\n\nThe Customer is successfully removed....";
-    f.close();
-    t.close();
-    cin.get();
-}
+    	t.open("temp.txt", ios::out | ios::binary);
+    	if(!t.is_open()) {
+    		cout << "ERROR: Cannot create temporary file!";
+    		getch();
+        	return;
+    	}
+    	
+    	f.open(DATABASE_FILE, ios::in | ios::binary);
+    	if(!f.is_open()) {
+    		cout << "No records found!";
+    		getch();
+        	return;
+    	}
+    	
+    	system("cls");
+    	cout << "Enter the Room Number to delete: ";
+    	cin >> roomnumber;
+    	cin.ignore();
+    	
+		while(f.read((char*)&s, sizeof(s))) {
+        	if(strcmp(s.roomnumber, roomnumber) == 0) {
+            	i = 0;
+            	continue;  // Skip this record
+        	}
+        	t.write((char*)&s, sizeof(s));
+    	}
+    	
+    	f.close();
+    	t.close();
+    	
+    	if(i == 1) {
+    		system("cls");
+    		cout << "Record not found for room number: " << roomnumber;
+    		cout << "\nPress any key to continue...";
+        	getch();
+        	remove("temp.txt");
+    	}
+    	else {
+    		remove(DATABASE_FILE.c_str());
+    		rename("temp.txt", DATABASE_FILE.c_str());
+    		system("cls");
+    		cout << "✓ Customer record successfully deleted!";
+    		cout << "\nPress any key to continue...";
+    		getch();
+    	}
+	}
 
 	void search() {
 	
     	system("cls");
     	ifstream f;
-    	char roomnumber[20];
-    	int flag=1;
-    	f.open("add.txt",ios::in);
-    	if(!f.is_open())
-        exit(0);
-    	cout << "Enter Room number of the customer to search its details: \n";
+    	char roomnumber[MAX_ROOM_NO];
+    	int flag = 1;
+    	
+    	f.open(DATABASE_FILE, ios::in | ios::binary);
+    	if(!f.is_open()) {
+    		cout << "No records found!";
+    		getch();
+        	return;
+    	}
+    	
+    	cout << "Enter Room number to search: ";
     	cin >> roomnumber;
+    	cin.ignore();
     	
-		while(f.read((char*)&s,sizeof(s))) {
+		while(f.read((char*)&s, sizeof(s))) {
+    		if(strcmp(s.roomnumber, roomnumber) == 0) {
+            	flag = 0;
+            	system("cls");
+            	cout << "\n╔═══════════════════════════════════════════════════════╗";
+            	cout << "\n║              CUSTOMER RECORD FOUND                     ║";
+            	cout << "\n╚═══════════════════════════════════════════════════════╝\n";
+            	
+            	cout << "\nRoom Number:    " << s.roomnumber;
+            	cout << "\nName:           " << s.name;
+            	cout << "\nAddress:        " << s.address;
+            	cout << "\nPhone Number:   " << s.phonenumber;
+            	cout << "\nNationality:    " << s.nationality;
+            	cout << "\nEmail:          " << s.email;
+            	cout << "\nPeriod:         " << s.period;
+            	cout << "\nArrival Date:   " << s.arrivaldate;
+            	break;
+        	}
+    	}
     	
-        if(strcmp(s.roomnumber,roomnumber)==0) {
-        	
-            flag=0;
-            cout << "\n\tRecord Found\n ";
-            cout << "\nRoom Number:\t" << s.roomnumber;
-            cout << "\nName:\t" << s.name;
-            cout << "\nAddress:\t" << s.address;
-            cout << "\nPhone number:\t" << s.phonenumber;
-            cout << "\nNationality:\t" << s.nationality;
-            cout << "\nEmail:\t" << s.email;
-            cout << "\nPeriod:\t" << s.period;
-            cout << "\nArrival date:\t" << s.arrivaldate;
-            flag=0;
-            break;
-        }
-    }
-    
-	if(flag==1) {
-       
-	    cout << "\n\tRequested Customer could not be found!";
-	    
-    }
-    
+	if(flag == 1) {
+    	cout << "\n✗ Record not found for room: " << roomnumber;
+	}
+    	
+	cout << "\n\nPress any key to continue...";
 	f.close();
-    cin.get();
+    getch();
 }
 
 	void edit() {
 	
     	fstream f;
-    	int k=1;
-    	char roomnumber[20];
-    	long int size=sizeof(s);
-    	f.open("add.txt",ios::in|ios::out);
-    	if(!f.is_open())
-        exit(0);
+    	int k = 1;
+    	char roomnumber[MAX_ROOM_NO];
+    	long int size = sizeof(s);
+    	
+    	f.open(DATABASE_FILE, ios::in | ios::out | ios::binary);
+    	if(!f.is_open()) {
+    		cout << "No records found!";
+    		getch();
+        	return;
+    	}
+    	
     	system("cls");
-    	cout << "Enter Room number of the customer to edit:\n\n";
+    	cout << "Enter Room number to edit: ";
     	cin >> roomnumber;
     	cin.ignore();
+
+    	while(f.read((char*)&s, sizeof(s))) {
+        	if(strcmp(s.roomnumber, roomnumber) == 0) {
+            	k = 0;
+            	system("cls");
+            	cout << "\nEditing record for room: " << roomnumber;
+            	cout << "\n========================================\n";
+            	
+            	cout << "Enter Room Number: ";
+            	cin.getline(s.roomnumber, MAX_ROOM_NO);
+            	
+            	cout << "Enter Name: ";
+            	cin.getline(s.name, MAX_NAME);
+            	
+            	cout << "Enter Address: ";
+            	cin.getline(s.address, MAX_ADDRESS);
+            	
+            	cout << "Enter Phone Number: ";
+            	cin.getline(s.phonenumber, MAX_PHONE);
+            	
+            	cout << "Enter Nationality: ";
+            	cin.getline(s.nationality, MAX_NATIONALITY);
+            	
+            	cout << "Enter Email: ";
+            	cin.getline(s.email, MAX_EMAIL);
+            	
+            	cout << "Enter Period: ";
+            	cin.getline(s.period, MAX_PERIOD);
+            	
+            	cout << "Enter Arrival Date: ";
+            	cin.getline(s.arrivaldate, MAX_DATE);
+            	
+            	f.seekp(-size, ios::cur);
+            	f.write((char*)&s, sizeof(s));
+            	break;
+        	}
+    	}
     
-    while(f.read((char*)&s,sizeof(s))) {
-        
-		if(strcmp(s.roomnumber,roomnumber)==0) {
-        	
-            k=0;
-            cout << "\nEnter Room Number     :";
-            cin >> s.roomnumber;
-            cout << "\nEnter Name    :";
-            cin >> s.name;
-            cout << "\nEnter Address        :";
-            cin >> s.address;
-            cout << "\nEnter Phone number :";
-            cin >> s.phonenumber;
-            cout << "\nEnter Nationality :";
-            cin >> s.nationality;
-            cout << "\nEnter Email :";
-            cin >> s.email;
-            cout << "\nEnter Period :";
-            cin >> s.period;
-            cout << "\nEnter Arrival date :";
-            cin >> s.arrivaldate;
-            f.seekp(-size,ios::cur);
-            f.write((char*)&s,sizeof(s));
-            break;
-        }
+    f.close();
+    
+    if(k == 1) {
+    	system("cls");
+        cout << "Record not found for room: " << roomnumber;
+        cout << "\nPress any key to continue...";
+        getch();
     }
-    
-    if(k==1) {
-    	
-        cout << "\n\nTHE RECORD DOESN'T EXIST!!!!";
-        f.close();
-        cin.get();
-    }
-    
     else {
-        
-		f.close();
-        cout << "\n\n\t\tYOUR RECORD IS SUCCESSFULLY EDITED!!!";
-        cin.get();
+        system("cls");
+        cout << "✓ Record successfully edited!";
+        cout << "\nPress any key to continue...";
+        getch();
     }
 }
 
